@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — CULINA-SUITE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: var(--color-base-900);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--space-6);
+            overflow: hidden;
+        }
+
+        .login-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(0, 212, 180, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(123, 97, 255, 0.08) 0%, transparent 40%);
+            z-index: -1;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-10);
+            box-shadow: var(--shadow-2xl);
+            backdrop-filter: blur(20px);
+            animation: card-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes card-reveal {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+                filter: blur(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .login-logo {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+            letter-spacing: -0.04em;
+        }
+
+        .login-logo span {
+            color: var(--color-primary);
+        }
+
+        .login-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-4) var(--space-5);
+            background: var(--color-base-800);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-size: var(--text-base);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            background: var(--color-base-700);
+            box-shadow: 0 0 0 4px var(--color-primary-ghost);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.3)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: var(--space-4);
+            margin-top: var(--space-6);
+            font-size: var(--text-base);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: var(--space-8);
+            font-size: var(--text-xs);
+            color: var(--text-micro);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-bg"></div>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo">CULINA<span>-SUITE</span></div>
+            <p class="login-subtitle">Enterprise Restaurant Management Login</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="name">Full Name</label>
+                <input class="form-input" type="text" id="name" placeholder="e.g. Rahul Sharma" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input class="form-input" type="email" id="email" placeholder="rahul@restaurant.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="position">Position / Role</label>
+                <select class="form-input form-select" id="position" required>
+                    <option value="" disabled selected>Select your role</option>
+                    <option value="Customer">Customer / Guest</option>
+                    <option value="Cashier">Cashier / Server</option>
+                    <option value="Chef">Chef / Kitchen Staff</option>
+                    <option value="Manager">Owner / Manager</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary login-btn">Secure Login →</button>
+        </form>
+
+        <div class="login-footer">
+            Culina Suite v4.2.1 · Enterprise Grade Security
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const userData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                position: document.getElementById('position').value,
+                loginTime: new Date().toISOString()
+            };
+
+            // Save to localStorage
+            localStorage.setItem('cs_user', JSON.stringify(userData));
+
+            // Role-based redirection logic
+            const pos = userData.position;
+            let target = 'index.html';
+
+            if (pos === 'Cashier') target = 'pos.html';
+            else if (pos === 'Chef') target = 'kds.html';
+            else if (pos === 'Manager') target = 'admin.html';
+            else if (pos === 'Customer') target = 'customer.html';
+
+            // Cinematic fade-out before redirect
+            document.querySelector('.login-card').style.transition = 'all 0.4s ease';
+            document.querySelector('.login-card').style.opacity = '0';
+            document.querySelector('.login-card').style.transform = 'scale(0.98)';
+
+            setTimeout(() => {
+                window.location.href = target;
+            }, 400);
+        });
+    </script>
+</body>
+
+</html>

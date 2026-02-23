@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory & Recipe Manager — CULINA-SUITE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .inv-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            height: calc(100vh - var(--nav-height));
+            overflow: hidden;
+        }
+
+        .inv-sidebar {
+            background: var(--color-base-800);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .inv-main {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .inv-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-subtle);
+            background: var(--color-base-800);
+        }
+
+        .inv-tab {
+            padding: var(--space-4) var(--space-5);
+            font-size: var(--text-sm);
+            font-weight: 700;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+        }
+
+        .inv-tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .inv-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-5);
+        }
+
+        /* Sidebar */
+        .sidebar-hdr {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-hdr-title {
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .sidebar-hdr-sub {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .menu-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .menu-list-item {
+            padding: var(--space-3) var(--space-4);
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-subtle);
+            transition: all var(--transition-fast);
+        }
+
+        .menu-list-item:hover,
+        .menu-list-item.active {
+            background: var(--color-primary-ghost);
+        }
+
+        .menu-list-item.active {
+            border-left: 2px solid var(--color-primary);
+        }
+
+        .mli-name {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .mli-cat {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .mli-price {
+            font-size: var(--text-xs);
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        /* Recipe view */
+        .recipe-header {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-5);
+        }
+
+        .recipe-title {
+            font-size: var(--text-2xl);
+            font-weight: 800;
+            margin-bottom: var(--space-2);
+        }
+
+        .recipe-meta {
+            display: flex;
+            gap: var(--space-4);
+            flex-wrap: wrap;
+            margin-bottom: var(--space-4);
+        }
+
+        .rmeta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .rmeta-lbl {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--text-muted);
+        }
+
+        .rmeta-val {
+            font-size: var(--text-base);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .ingredients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: var(--space-3);
+        }
+
+        .ing-card {
+            background: var(--color-base-800);
+            border: 1px solid;
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ing-card.ok {
+            border-color: rgba(34, 217, 128, .2);
+        }
+
+        .ing-card.low {
+            border-color: rgba(245, 166, 35, .35);
+            background: rgba(245, 166, 35, .04);
+        }
+
+        .ing-card.critical {
+            border-color: rgba(255, 71, 87, .35);
+            background: rgba(255, 71, 87, .04);
+            animation: critical-flash 3s infinite;
+        }
+
+        .ing-name {
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .ing-stock {
+            font-size: var(--text-xl);
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ing-card.ok .ing-stock {
+            color: var(--color-success);
+        }
+
+        .ing-card.low .ing-stock {
+            color: var(--color-warning);
+        }
+
+        .ing-card.critical .ing-stock {
+            color: var(--color-critical);
+        }
+
+        .ing-bar {
+            height: 4px;
+            background: var(--color-base-600);
+            border-radius: var(--radius-full);
+            margin-top: var(--space-2);
+            overflow: hidden;
+        }
+
+        .ing-fill {
+            height: 100%;
+            border-radius: var(--radius-full);
+            transition: width .8s ease;
+        }
+
+        .ing-card.ok .ing-fill {
+            background: var(--color-success);
+        }
+
+        .ing-card.low .ing-fill {
+            background: var(--color-warning);
+        }
+
+        .ing-card.critical .ing-fill {
+            background: var(--color-critical);
+        }
+
+        /* Stock table */
+        .stock-toolbar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .stock-search {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            background: var(--color-base-700);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-3) var(--space-4);
+        }
+
+        .stock-search input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: var(--text-sm);
+        }
+
+        .stock-table-wrap {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .stock-row {
+            display: grid;
+            grid-template-columns: 1fr 80px 100px 80px 120px 120px;
+            align-items: center;
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border-subtle);
+            gap: var(--space-3);
+            transition: background var(--transition-fast);
+        }
+
+        .stock-row:last-child {
+            border-bottom: none;
+        }
+
+        .stock-row:hover {
+            background: var(--surface-glass);
+        }
+
+        .stock-row.hdr {
+            background: var(--color-base-750);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--text-muted);
+        }
+
+        .decrement-anim {
+            animation: count-up .4s ease;
+        }
+
+        /* PO card */
+        .po-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+        }
+
+        .po-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-4);
+        }
+
+        .po-items {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .po-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-3);
+            background: var(--surface-glass);
+            border-radius: var(--radius-md);
+        }
+
+        @media(max-width:900px) {
+            .inv-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .inv-sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--border-subtle);
+                max-height: 200px;
+            }
+
+            .stock-row {
+                grid-template-columns: 1fr 80px 100px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="cs-nav"></nav>
+    <div class="cs-page" style="height:100vh;display:flex;flex-direction:column;overflow:hidden;">
+        <!-- PAGE HEADER -->
+        <div
+            style="padding:var(--space-4) var(--space-5);background:var(--color-base-800);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:var(--space-4);">
+            <div>
+                <div style="font-size:var(--text-base);font-weight:800;">Inventory &amp; Recipe Manager</div>
+                <div style="font-size:var(--text-xs);color:var(--text-muted);">Auto-deduction · Stock alerts · Purchase
+                    orders</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:var(--space-3);">
+                <div
+                    style="display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs);font-weight:700;color:var(--color-critical);">
+                    <span>⚠</span> 2 Critical Alerts
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="generatePO()">+ Generate PO</button>
+            </div>
+        </div>
+
+        <div class="inv-layout" style="flex:1;">
+            <!-- LEFT: MENU LIST -->
+            <div class="inv-sidebar">
+                <div class="sidebar-hdr">
+                    <div class="sidebar-hdr-title">Menu Items</div>
+                    <div class="sidebar-hdr-sub">Select to view recipe map</div>
+                </div>
+                <div class="menu-list" id="menuList"></div>
+                <!-- Cost summary -->
+                <div style="padding:var(--space-4);border-top:1px solid var(--border-subtle);">
+                    <div
+                        style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:var(--space-2);">
+                        Avg Food Cost</div>
+                    <div style="font-size:var(--text-2xl);font-weight:900;color:var(--color-primary);">31.4%</div>
+                    <div class="progress-bar-wrap" style="margin-top:var(--space-2);">
+                        <div class="progress-bar-fill" style="width:31.4%;"></div>
+                    </div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">Target: &lt;30%</div>
+                </div>
+            </div>
+
+            <!-- RIGHT: MAIN CONTENT -->
+            <div class="inv-main">
+                <div class="inv-tabs">
+                    <div class="inv-tab active" onclick="switchTab('recipe',this)">Recipe Map</div>
+                    <div class="inv-tab" onclick="switchTab('stock',this)">Stock Levels</div>
+                    <div class="inv-tab" onclick="switchTab('po',this)">Purchase Orders</div>
+                </div>
+
+                <!-- RECIPE TAB -->
+                <div class="inv-content" id="tabRecipe">
+                    <div id="recipeView"></div>
+                </div>
+
+                <!-- STOCK TAB -->
+                <div class="inv-content" id="tabStock" style="display:none;">
+                    <div class="stock-toolbar">
+                        <div class="stock-search">
+                            <span style="color:var(--text-muted);">🔍</span>
+                            <input type="text" placeholder="Search ingredients..." oninput="filterStock(this.value)">
+                        </div>
+                        <button class="btn btn-sm btn-secondary" onclick="simulateUsage()">⚡ Simulate Usage</button>
+                        <button class="btn btn-sm btn-ghost" onclick="renderStock()">↺ Refresh</button>
+                    </div>
+                    <div class="stock-table-wrap">
+                        <div class="stock-row hdr">
+                            <span>Ingredient</span><span>On Hand</span><span>Min
+                                Level</span><span>Unit</span><span>Status</span><span>Supplier</span>
+                        </div>
+                        <div id="stockTable"></div>
+                    </div>
+                </div>
+
+                <!-- PO TAB -->
+                <div class="inv-content" id="tabPO" style="display:none;">
+                    <div id="poContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script>
+        let selectedItem = CS.menu[0];
+        const stockData = [...CS.inventory];
+
+        /* ── MENU LIST ── */
+        function renderMenuList() {
+            const list = document.getElementById('menuList');
+            list.innerHTML = CS.menu.map((item, i) => `
+        <div class="menu-list-item ${i === 0 ? 'active' : ''}" onclick="selectMenuItem(${item.id},this)">
+          <div class="mli-name">${item.name}</div>
+          <div style="display:flex;justify-content:space-between;margin-top:2px;">
+            <div class="mli-cat">${item.category}</div>
+            <div class="mli-price">₹${item.price}</div>
+          </div>
+        </div>`).join('');
+        }
+
+        function selectMenuItem(id, el) {
+            document.querySelectorAll('.menu-list-item').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            selectedItem = CS.menu.find(m => m.id === id);
+            renderRecipe();
+        }
+
+        /* ── RECIPE MAP ── */
+        function renderRecipe() {
+            if (!selectedItem) return;
+            const costPct = Math.round((selectedItem.cost / selectedItem.price) * 100);
+            const profitPct = 100 - costPct;
+            const doc = document.getElementById('recipeView');
+            doc.innerHTML = `
+        <div class="recipe-header">
+          <div class="recipe-title">${selectedItem.name}</div>
+          <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4);">
+            <span class="badge badge-primary">SKU: ${selectedItem.sku}</span>
+            <span class="badge badge-neutral">${selectedItem.category}</span>
+            <span class="badge badge-success">In Stock: ${selectedItem.stock}</span>
+          </div>
+          <div class="recipe-meta">
+            <div class="rmeta"><div class="rmeta-lbl">Sell Price</div><div class="rmeta-val">₹${selectedItem.price}</div></div>
+            <div class="rmeta"><div class="rmeta-lbl">Food Cost</div><div class="rmeta-val">₹${selectedItem.cost}</div></div>
+            <div class="rmeta"><div class="rmeta-lbl">Cost %</div><div class="rmeta-val" style="color:${costPct > 35 ? 'var(--color-critical)' : costPct > 28 ? 'var(--color-warning)' : 'var(--color-success)'};">${costPct}%</div></div>
+            <div class="rmeta"><div class="rmeta-lbl">Profit Margin</div><div class="rmeta-val" style="color:var(--color-success);">${profitPct}%</div></div>
+          </div>
+          <div style="margin-bottom:var(--space-2);font-size:var(--text-xs);color:var(--text-muted);">Cost Ratio</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${costPct}%;background:${costPct > 35 ? 'var(--color-critical)' : costPct > 28 ? 'var(--color-warning)' : 'var(--color-success)'};" ></div></div>
+        </div>
+        <div style="margin-bottom:var(--space-4);">
+          <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-3);">Ingredient Mapping <span style="font-size:var(--text-xs);color:var(--text-muted);font-weight:400;">(${selectedItem.ingredients.length} components)</span></div>
+          <div class="ingredients-grid" id="ingGrid"></div>
+        </div>
+        <div style="padding:var(--space-4);background:var(--color-primary-ghost);border:1px solid var(--border-primary);border-radius:var(--radius-lg);font-size:var(--text-sm);color:var(--text-secondary);">
+          <strong style="color:var(--color-primary);">Auto-Deduction Active:</strong> When this item is confirmed at POS, stock levels for all linked ingredients are automatically decremented in real-time.
+        </div>`;
+            renderIngredients();
+        }
+
+        function renderIngredients() {
+            const grid = document.getElementById('ingGrid');
+            if (!grid || !selectedItem) return;
+            grid.innerHTML = selectedItem.ingredients.map(ingName => {
+                const inv = stockData.find(i => i.name.toLowerCase().includes(ingName.toLowerCase().split(' ')[0])) || { onHand: 10, minLevel: 5, status: 'ok', unit: 'units' };
+                const pct = Math.min((inv.onHand / Math.max(inv.minLevel * 2, 1)) * 100, 100);
+                return `
+          <div class="ing-card ${inv.status}" data-ing="${ingName}">
+            <div class="ing-name">${ingName}</div>
+            <div class="ing-stock">${inv.onHand} <span style="font-size:var(--text-xs);font-weight:500;opacity:.7;">${inv.unit}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:var(--space-2);">
+              <span>Min: ${inv.minLevel} ${inv.unit}</span>
+              <span class="badge ${inv.status === 'ok' ? 'badge-success' : inv.status === 'low' ? 'badge-warning' : 'badge-critical'}" style="font-size:8px;">${inv.status.toUpperCase()}</span>
+            </div>
+            <div class="ing-bar"><div class="ing-fill" style="width:${pct}%;"></div></div>
+          </div>`;
+            }).join('');
+        }
+
+        /* ── STOCK TABLE ── */
+        function renderStock(filter = '') {
+            let items = filter ? stockData.filter(i => i.name.toLowerCase().includes(filter.toLowerCase())) : stockData;
+            document.getElementById('stockTable').innerHTML = items.map(item => {
+                const pct = Math.min((item.onHand / Math.max(item.minLevel * 2, 1)) * 100, 100);
+                const statusMap = { ok: 'badge-success', low: 'badge-warning', critical: 'badge-critical' };
+                return `
+          <div class="stock-row">
+            <div>
+              <div style="font-size:var(--text-sm);font-weight:600;color:var(--text-primary);">${item.name}</div>
+              <div style="font-size:var(--text-xs);color:var(--text-muted);">${item.id}</div>
+            </div>
+            <div style="font-size:var(--text-sm);font-weight:700;color:${item.status === 'ok' ? 'var(--color-success)' : item.status === 'low' ? 'var(--color-warning)' : 'var(--color-critical)'};" id="stock-${item.id}">${item.onHand}</div>
+            <div style="font-size:var(--text-sm);color:var(--text-secondary);">${item.minLevel}</div>
+            <div style="font-size:var(--text-sm);color:var(--text-muted);">${item.unit}</div>
+            <div><span class="badge ${statusMap[item.status]}">${item.status.toUpperCase()}</span></div>
+            <div style="font-size:var(--text-xs);color:var(--text-secondary);">${item.supplier}</div>
+          </div>`;
+            }).join('');
+        }
+
+        function filterStock(v) { renderStock(v); }
+
+        function simulateUsage() {
+            stockData.forEach(item => {
+                const usage = Math.random() * 2;
+                item.onHand = Math.max(0, parseFloat((item.onHand - usage).toFixed(1)));
+                if (item.onHand <= 0) item.status = 'critical';
+                else if (item.onHand <= item.minLevel) item.status = item.onHand < item.minLevel * 0.5 ? 'critical' : 'low';
+                else item.status = 'ok';
+            });
+            renderStock();
+            renderIngredients();
+            showToast('Usage simulated — stock levels updated', 'info');
+        }
+
+        /* ── PURCHASE ORDERS ── */
+        function renderPO() {
+            const alerts = stockData.filter(i => i.status !== 'ok');
+            document.getElementById('poContent').innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-5);">
+          <div>
+            <div style="font-size:var(--text-lg);font-weight:700;">Auto-Generated Purchase Orders</div>
+            <div style="font-size:var(--text-xs);color:var(--text-muted);">${alerts.length} items below threshold</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="submitAllPOs()">Submit All POs</button>
+        </div>
+        ${alerts.length === 0 ? '<div style="text-align:center;padding:var(--space-12);color:var(--text-muted);">All stock levels are healthy ✓</div>' :
+                    alerts.map(item => `
+          <div class="po-card">
+            <div class="po-header">
+              <div>
+                <div style="font-size:var(--text-base);font-weight:700;">${item.name}</div>
+                <div style="font-size:var(--text-xs);color:var(--text-muted);">Supplier: ${item.supplier}</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="badge ${item.status === 'critical' ? 'badge-critical' : 'badge-warning'}">${item.status.toUpperCase()}</div>
+                <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">₹${(item.costPerUnit * item.reorderQty).toLocaleString('en-IN')} est.</div>
+              </div>
+            </div>
+            <div class="po-items">
+              <div class="po-item">
+                <span style="font-size:var(--text-xs);color:var(--text-muted);width:80px;">Current</span>
+                <span style="font-size:var(--text-sm);font-weight:700;color:${item.status === 'critical' ? 'var(--color-critical)' : 'var(--color-warning)'};">${item.onHand} ${item.unit}</span>
+              </div>
+              <div class="po-item">
+                <span style="font-size:var(--text-xs);color:var(--text-muted);width:80px;">Min Level</span>
+                <span style="font-size:var(--text-sm);font-weight:700;">${item.minLevel} ${item.unit}</span>
+              </div>
+              <div class="po-item">
+                <span style="font-size:var(--text-xs);color:var(--text-muted);width:80px;">Order Qty</span>
+                <span style="font-size:var(--text-sm);font-weight:700;color:var(--color-primary);">${item.reorderQty} ${item.unit}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:var(--space-2);margin-top:var(--space-4);">
+              <button class="btn btn-primary btn-sm flex-1" onclick="submitPO('${item.id}','${item.name}')">✓ Submit PO</button>
+              <button class="btn btn-ghost btn-sm" onclick="showToast('Edit mode TBD','info')">✎ Edit</button>
+            </div>
+          </div>`).join('')}`;
+        }
+
+        function generatePO() { switchTab('po', document.querySelectorAll('.inv-tab')[2]); renderPO(); }
+        function submitPO(id, name) { showToast(`PO submitted for ${name}`, 'success'); }
+        function submitAllPOs() { showToast('All purchase orders submitted to suppliers', 'success'); }
+
+        function switchTab(tab, el) {
+            document.querySelectorAll('.inv-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tabRecipe').style.display = tab === 'recipe' ? 'block' : 'none';
+            document.getElementById('tabStock').style.display = tab === 'stock' ? 'block' : 'none';
+            document.getElementById('tabPO').style.display = tab === 'po' ? 'block' : 'none';
+            if (tab === 'stock') renderStock();
+            if (tab === 'po') renderPO();
+        }
+
+        renderMenuList();
+        renderRecipe();
+    </script>
+</body>
+
+</html>

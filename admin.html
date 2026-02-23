@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — CULINA-SUITE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            height: calc(100vh - var(--nav-height));
+            overflow: hidden;
+        }
+
+        .admin-sidebar {
+            background: var(--color-base-800);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-4);
+        }
+
+        .admin-main {
+            overflow-y: auto;
+            padding: var(--space-5) var(--space-6);
+        }
+
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-bottom: 2px;
+        }
+
+        .admin-nav-item:hover,
+        .admin-nav-item.active {
+            color: var(--color-primary);
+            background: var(--color-primary-ghost);
+        }
+
+        .admin-nav-section {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--text-micro);
+            padding: var(--space-4) var(--space-4) var(--space-2);
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .chart-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-5);
+        }
+
+        .chart-label-row {
+            display: flex;
+            gap: var(--space-3);
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: var(--space-3);
+            justify-content: space-between;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 140px;
+            width: 100%;
+            margin-top: var(--space-4);
+        }
+
+        .bar-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .bar-el {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            transition: opacity var(--transition-fast);
+        }
+
+        .bar-el:hover {
+            opacity: .8;
+        }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .table-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .df-btn {
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-glass);
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .df-btn.active {
+            background: var(--color-primary-ghost);
+            border-color: var(--border-primary);
+            color: var(--color-primary);
+        }
+
+        .hourly-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 80px;
+            width: 100%;
+            margin-top: var(--space-3);
+        }
+
+        .hbar {
+            flex: 1;
+            border-radius: 2px 2px 0 0;
+            cursor: pointer;
+            transition: opacity var(--transition-fast);
+            background: linear-gradient(180deg, var(--color-secondary), var(--color-secondary-dim));
+        }
+
+        .hbar:hover {
+            opacity: .7;
+        }
+
+        .outlet-perf-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .outlet-perf-row:last-child {
+            border-bottom: none;
+        }
+
+        @media(max-width:1200px) {
+            .metrics-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:900px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                display: none;
+            }
+
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="cs-nav"></nav>
+    <div class="cs-page" style="display:flex;flex-direction:column;height:100vh;overflow:hidden;">
+        <!-- PAGE TOOLBAR -->
+        <div
+            style="padding:var(--space-3) var(--space-5);background:var(--color-base-800);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:var(--space-4);">
+            <div style="font-size:var(--text-base);font-weight:800;">Admin Dashboard</div>
+            <div style="font-size:var(--text-xs);color:var(--text-muted);">The Grand Brasserie · All Outlets</div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:var(--space-3);">
+                <div id="live-clock"
+                    style="font-family:var(--font-mono);font-size:var(--text-sm);color:var(--text-muted);"></div>
+                <div class="live-badge">LIVE</div>
+                <div class="date-filter">
+                    <button class="df-btn active" onclick="setDateRange('today',this)">Today</button>
+                    <button class="df-btn" onclick="setDateRange('week',this)">Week</button>
+                    <button class="df-btn" onclick="setDateRange('month',this)">Month</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-layout" style="flex:1;">
+            <!-- SIDEBAR -->
+            <div class="admin-sidebar">
+                <div style="margin-bottom:var(--space-4);">
+                    <div style="font-size:var(--text-xs);color:var(--text-muted);">Logged in as</div>
+                    <div style="font-size:var(--text-sm);font-weight:700;">Arun Sharma</div>
+                    <div class="badge badge-info" style="margin-top:4px;">Owner</div>
+                </div>
+                <div class="admin-nav-section">Analytics</div>
+                <div class="admin-nav-item active" onclick="setNav(this)"><span>📊</span> Overview</div>
+                <div class="admin-nav-item" onclick="setNav(this)"><span>💰</span> Revenue</div>
+                <div class="admin-nav-item" onclick="setNav(this)"><span>🍽️</span> Menu Performance</div>
+                <div class="admin-nav-item" onclick="setNav(this)"><span>👥</span> Staff Reports</div>
+                <div class="admin-nav-section">Management</div>
+                <div class="admin-nav-item" onclick="setNav(this)"><span>📋</span> Menu Editor</div>
+                <div class="admin-nav-item" onclick="setNav(this)"><span>🏷️</span> Pricing</div>
+                <div class="admin-nav-item" onclick="setNav(this)"><span>⚙️</span> Settings</div>
+                <div style="margin-top:auto;">
+                    <div
+                        style="padding:var(--space-4);background:var(--color-primary-ghost);border:1px solid var(--border-primary);border-radius:var(--radius-lg);">
+                        <div
+                            style="font-size:var(--text-xs);font-weight:700;color:var(--color-primary);margin-bottom:var(--space-2);">
+                            Platform Status</div>
+                        <div style="font-size:10px;color:var(--text-secondary);">All 4 outlets online<br>Last sync:
+                            <span style="color:var(--color-success);font-weight:700;">2s ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="admin-main">
+                <!-- KPIs -->
+                <div class="metrics-row" id="kpiRow"></div>
+
+                <!-- CHARTS -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <div
+                            style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+                            <div>
+                                <div style="font-size:var(--text-base);font-weight:700;">Revenue This Week</div>
+                                <div style="font-size:var(--text-xs);color:var(--text-muted);">Daily totals across all
+                                    outlets</div>
+                            </div>
+                            <div style="font-size:var(--text-2xl);font-weight:900;color:var(--color-primary);">
+                                <span data-counter="304500" data-prefix="₹">0</span>
+                            </div>
+                        </div>
+                        <div class="bar-chart" id="weekChart"></div>
+                        <div class="chart-label-row" id="weekLabels"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-4);">Category
+                            Split</div>
+                        <div id="catDonut" style="display:flex;flex-direction:column;gap:var(--space-3);"></div>
+                    </div>
+                </div>
+
+                <!-- HOURLY + TOP ITEMS -->
+                <div class="chart-grid" style="margin-bottom:var(--space-6);">
+                    <div class="chart-card">
+                        <div style="font-size:var(--text-base);font-weight:700;">Hourly Order Volume</div>
+                        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:var(--space-2);">
+                            Today · 8am – midnight</div>
+                        <div class="hourly-chart" id="hourlyChart"></div>
+                        <div
+                            style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-top:4px;">
+                            <span>8AM</span><span>12PM</span><span>4PM</span><span>8PM</span><span>12AM</span>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-4);">Today's
+                            KPIs</div>
+                        <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+                            <div>
+                                <div
+                                    style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--text-muted);margin-bottom:4px;">
+                                    <span>Table Turnover</span><span
+                                        style="color:var(--text-primary);font-weight:700;">3.2×</span>
+                                </div>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill" style="width:64%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--text-muted);margin-bottom:4px;">
+                                    <span>Avg Order Value</span><span
+                                        style="color:var(--text-primary);font-weight:700;">₹572</span>
+                                </div>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill"
+                                        style="width:71%;background:linear-gradient(90deg,var(--color-secondary),var(--color-info));">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--text-muted);margin-bottom:4px;">
+                                    <span>Customer Satisfaction</span><span
+                                        style="color:var(--color-success);font-weight:700;">4.7★</span>
+                                </div>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill"
+                                        style="width:94%;background:linear-gradient(90deg,var(--color-success),var(--color-primary));">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--text-muted);margin-bottom:4px;">
+                                    <span>Kitchen Efficiency</span><span
+                                        style="color:var(--color-warning);font-weight:700;">78%</span>
+                                </div>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill"
+                                        style="width:78%;background:linear-gradient(90deg,var(--color-warning),var(--color-warning-dim));">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div
+                                    style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--text-muted);margin-bottom:4px;">
+                                    <span>Food Cost Ratio</span><span
+                                        style="color:var(--color-primary);font-weight:700;">31.4%</span>
+                                </div>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill"
+                                        style="width:31.4%;background:linear-gradient(90deg,var(--color-primary),var(--color-primary-dim));">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM GRID -->
+                <div class="bottom-grid">
+                    <!-- TOP ITEMS TABLE -->
+                    <div class="table-card">
+                        <div
+                            style="padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--border-subtle);font-size:var(--text-base);font-weight:700;">
+                            Top Performing Items</div>
+                        <table class="cs-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Revenue</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topItemsTable"></tbody>
+                        </table>
+                    </div>
+                    <!-- OUTLET PERFORMANCE -->
+                    <div class="table-card">
+                        <div
+                            style="padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--border-subtle);font-size:var(--text-base);font-weight:700;">
+                            Outlet Performance</div>
+                        <div id="outletPerf"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script>
+        const KPI_CONFIG = [
+            { label: 'Revenue Today', value: '84,200', prefix: '₹', delta: '+12.4%', dir: 'up', color: 'primary' },
+            { label: 'Total Orders', value: '147', delta: '+8', dir: 'up', color: 'success' },
+            { label: 'Avg Ticket', value: '₹572', delta: '+₹34', dir: 'up', color: 'secondary' },
+            { label: 'New Customers', value: '31', delta: '-3', dir: 'down', color: 'warning' },
+            { label: 'Covers Served', value: '214', delta: '+28', dir: 'up', color: 'info' },
+        ];
+
+        function renderKPIs() {
+            document.getElementById('kpiRow').innerHTML = KPI_CONFIG.map((k, i) => {
+                const cleanValue = k.value.replace(/[,₹+%-]/g, '');
+                const prefix = k.prefix || (k.value.includes('₹') ? '₹' : '');
+                const suffix = k.suffix || (k.value.includes('%') ? '%' : '');
+                const isDecimal = k.value.includes('.');
+
+                return `
+                <div class="metric-card ${k.color}" data-animate style="animation-delay:${i * .08}s;">
+                  <div class="metric-label">${k.label}</div>
+                  <div class="metric-value" style="color:var(--color-${k.color === `info` ? `info` : k.color === `primary` ? `primary` : k.color === `success` ? `success` : k.color === `warning` ? `warning` : `secondary`});">
+                    <span data-counter="${cleanValue}" data-prefix="${prefix}" data-suffix="${suffix}" data-decimals="${isDecimal ? 1 : 0}">0</span>
+                  </div>
+                  <div class="metric-sub"><span class="metric-delta ${k.dir}">${k.delta}</span> vs yesterday</div>
+                </div>`;
+            }).join('');
+
+            // Re-init observer for new elements
+            if (typeof initScrollAnimations === 'function') initScrollAnimations();
+        }
+
+        function renderWeekChart() {
+            const data = CS.analytics.week;
+            const max = Math.max(...data.map(d => d.revenue));
+            const chart = document.getElementById('weekChart');
+            const labels = document.getElementById('weekLabels');
+            chart.innerHTML = data.map((d, i) => {
+                const pct = max > 0 ? Math.max((d.revenue / max) * 100, 2) : 2;
+                const isCurrent = i === 3;
+                return `<div class="bar-col">
+          <div style="font-size:10px;color:${d.revenue ? 'var(--text-muted)' : 'var(--text-micro)'};">${d.revenue ? '₹' + (d.revenue / 1000).toFixed(0) + 'k' : ''}</div>
+          <div class="bar-el" style="height:${pct}%;background:${isCurrent ? 'linear-gradient(180deg,var(--color-primary),var(--color-primary-dim))' : 'linear-gradient(180deg,var(--color-base-500),var(--color-base-400))'};" title="${d.day}: ₹${d.revenue.toLocaleString()}"></div>
+          </div>`;
+            }).join('');
+            labels.innerHTML = data.map(d => `<span>${d.day}</span>`).join('');
+        }
+
+        function renderCatSplit() {
+            const cats = [
+                { name: 'Mains', pct: 42, color: 'var(--color-primary)' },
+                { name: 'Cocktails', pct: 28, color: 'var(--color-secondary)' },
+                { name: 'Starters', pct: 16, color: 'var(--color-success)' },
+                { name: 'Desserts', pct: 9, color: 'var(--color-warning)' },
+                { name: 'Sides', pct: 5, color: 'var(--color-info)' },
+            ];
+            document.getElementById('catDonut').innerHTML = cats.map(c => `
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);margin-bottom:4px;">
+            <span style="color:var(--text-secondary);">${c.name}</span>
+            <span style="font-weight:700;color:${c.color};">${c.pct}%</span>
+          </div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${c.pct}%;background:${c.color};"></div></div>
+        </div>`).join('');
+        }
+
+        function renderHourly() {
+            const data = CS.analytics.hourly;
+            const max = Math.max(...data);
+            document.getElementById('hourlyChart').innerHTML = data.map((v, i) => `
+        <div class="hbar" style="height:${Math.max((v / max) * 100, 4)}%;" title="${8 + i}:00 · ${v} orders"></div>`).join('');
+        }
+
+        function renderTopItems() {
+            document.getElementById('topItemsTable').innerHTML = CS.analytics.topItems.map(item => `
+        <tr>
+          <td style="font-weight:600;color:var(--text-primary);">${item.name}</td>
+          <td>${item.qty}</td>
+          <td style="color:var(--color-primary);font-weight:700;">₹${item.revenue.toLocaleString('en-IN')}</td>
+          <td><span style="color:var(--color-success);font-size:12px;">▲</span></td>
+        </tr>`).join('');
+        }
+
+        function renderOutletPerf() {
+            document.getElementById('outletPerf').innerHTML = CS.config.outlets.map(o => {
+                const pct = o.revenue ? (o.revenue / 84200) * 100 : 0;
+                return `<div class="outlet-perf-row">
+          <div style="flex:1;">
+            <div style="font-size:var(--text-sm);font-weight:700;color:var(--text-primary);">${o.name}</div>
+            <div style="font-size:var(--text-xs);color:var(--text-muted);">${o.type}</div>
+          </div>
+          <div style="width:120px;">
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px;">
+              <span style="color:var(--text-muted);">${o.revenue ? '₹' + (o.revenue / 1000).toFixed(1) + 'k' : 'offline'}</span>
+              <span class="badge ${o.status === 'online' ? 'badge-success' : o.status === 'warning' ? 'badge-warning' : 'badge-critical'}" style="font-size:8px;">${o.status.toUpperCase()}</span>
+            </div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%;${o.status === 'offline' ? 'background:var(--color-critical);' : ''}"></div></div>
+          </div>
+        </div>`;
+            }).join('');
+        }
+
+        function setNav(el) { document.querySelectorAll('.admin-nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
+        function setDateRange(r, el) { document.querySelectorAll('.df-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); showToast(`Viewing: ${r}`, 'info', 1500); }
+
+        renderKPIs(); renderWeekChart(); renderCatSplit(); renderHourly(); renderTopItems(); renderOutletPerf();
+
+        // Live revenue ticker
+        setInterval(() => {
+            const increment = Math.floor(Math.random() * 200 + 100);
+            rev += increment;
+            const el = document.querySelector('[data-counter="304500"]'); // Targeted span
+            if (el) {
+                const currentRev = parseFloat(el.textContent.replace(/[^0-9.]/g, '')) || (rev - increment);
+                animateCounter(el, rev, 1000, '₹', '', 0);
+            }
+        }, 8000);
+    </script>
+</body>
+
+</html>

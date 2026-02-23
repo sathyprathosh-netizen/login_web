@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal — CULINA-SUITE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .portal-hero {
+            padding: var(--space-20) var(--space-6) var(--space-12);
+            text-align: center;
+            background: radial-gradient(circle at 50% 0%, rgba(0, 212, 180, 0.08) 0%, transparent 50%);
+        }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-8);
+            max-width: 1200px;
+            margin: 0 auto var(--space-12);
+            padding: 0 var(--space-6);
+        }
+
+        .portal-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50px;
+            padding: var(--space-10);
+            text-decoration: none;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card--hero {
+            grid-column: span 2;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(0, 212, 180, 0.05) 0%, rgba(123, 97, 255, 0.05) 100%);
+            border-color: rgba(0, 212, 180, 0.15);
+        }
+
+        .portal-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 212, 180, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
+        }
+
+        .portal-card__icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: var(--space-2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .portal-card__title {
+            font-size: var(--text-2xl);
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .portal-card__desc {
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .welcome-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: 6px 16px;
+            background: rgba(0, 212, 180, 0.1);
+            border: 1px solid rgba(0, 212, 180, 0.2);
+            border-radius: var(--radius-full);
+            color: var(--color-primary);
+            font-size: var(--text-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--space-6);
+        }
+
+        .rewards-points {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--color-primary);
+            line-height: 1;
+        }
+
+        .order-row {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: var(--space-4) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: var(--text-sm);
+        }
+
+        .order-status {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: rgba(0, 212, 180, 0.1);
+            color: var(--color-primary);
+        }
+
+        .pref-tag {
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 1024px) {
+            .portal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portal-card--hero {
+                grid-column: span 1;
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .portal-card {
+                border-radius: 30px;
+                padding: var(--space-8);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="cs-nav">
+        <!-- JS builds items -->
+    </nav>
+
+    <main>
+        <section class="portal-hero" data-animate>
+            <div class="welcome-badge">Loyalty Member</div>
+            <h1 class="section-heading">Welcome Back, <span id="userName">Guest</span></h1>
+            <p class="section-description">Your personalized dashboard for premium dining and exclusive rewards.</p>
+        </section>
+
+        <div class="portal-grid">
+            <!-- Loyalty Card -->
+            <div class="portal-card portal-card--hero" data-animate>
+                <div>
+                    <h2 class="portal-card__title">Culina Rewards</h2>
+                    <p class="portal-card__desc">You're only 250 points away from your next free appetizer!</p>
+                </div>
+                <div style="text-align: right;">
+                    <div class="rewards-points"><span data-counter="1250">0</span></div>
+                    <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6;">Silver
+                        Tier Member</div>
+                </div>
+            </div>
+
+            <!-- Main Actions -->
+            <a href="pos.html" class="portal-card" data-animate data-delay="100"
+                style="align-items: center; text-align: center;">
+                <div class="portal-card__icon" style="font-size: 40px; margin-bottom: 10px;">🛒</div>
+                <h3 class="portal-card__title">Order Now</h3>
+                <p class="portal-card__desc">Browse the menu and place a new order.</p>
+            </a>
+
+            <a href="ratings.html" class="portal-card" data-animate data-delay="200"
+                style="align-items: center; text-align: center;">
+                <div class="portal-card__icon" style="font-size: 40px; margin-bottom: 10px;">⭐</div>
+                <h3 class="portal-card__title">Ratings</h3>
+                <p class="portal-card__desc">View popular dishes and share your feedback.</p>
+            </a>
+
+            <!-- Recent Orders -->
+            <div class="portal-card" data-animate data-delay="300">
+                <h3 class="portal-card__title" style="margin-bottom: var(--space-4);">Recent Orders</h3>
+                <div class="order-row">
+                    <span>#CS-9842 · Short Ribs, Wine</span>
+                    <span class="order-status">Delivered</span>
+                </div>
+                <div class="order-row">
+                    <span>#CS-9721 · Salmon, Asparagus</span>
+                    <span class="order-status">Delivered</span>
+                </div>
+                <div class="order-row" style="border:none;">
+                    <span>#CS-9650 · Truffle Pasta</span>
+                    <span class="order-status">Delivered</span>
+                </div>
+                <a href="#"
+                    style="font-size: 11px; color: var(--color-primary); margin-top: 10px; text-decoration: none; font-weight: 700;">VIEW
+                    ALL HISTORY →</a>
+            </div>
+
+            <!-- Preferences -->
+            <div class="portal-card" data-animate data-delay="400">
+                <h3 class="portal-card__title" style="margin-bottom: var(--space-4);">Dining Preferences</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span class="pref-tag">No Peanuts</span>
+                    <span class="pref-tag">Quiet Corner Table</span>
+                    <span class="pref-tag">Medium-Rare Steak</span>
+                    <span class="pref-tag">Window View Preferred</span>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: auto; padding: 10px; font-size: 11px;">Update
+                    Preferences</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/script.js"></script>
+    <script>
+        const user = getUser();
+        if (user) {
+            document.getElementById('userName').textContent = user.name.split(' ')[0];
+        }
+    </script>
+</body>
+
+</html>

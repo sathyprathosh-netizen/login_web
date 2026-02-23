@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Outlet Control — CULINA-SUITE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .outlets-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: calc(100vh - var(--nav-height) - 52px);
+            overflow: hidden;
+        }
+
+        .outlets-left {
+            background: var(--color-base-800);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .outlets-right {
+            overflow-y: auto;
+            padding: var(--space-5) var(--space-6);
+        }
+
+        .outlet-card {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+
+        .outlet-card:hover,
+        .outlet-card.active {
+            background: var(--color-primary-ghost);
+        }
+
+        .outlet-card.active {
+            border-left: 3px solid var(--color-primary);
+        }
+
+        .outlet-head {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-2);
+        }
+
+        .outlet-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: var(--color-base-700);
+            flex-shrink: 0;
+        }
+
+        .outlet-name {
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .outlet-type {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .outlet-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-2);
+        }
+
+        .omet {
+            padding: var(--space-2);
+            background: var(--surface-glass);
+            border-radius: var(--radius-sm);
+        }
+
+        .omet-val {
+            font-size: var(--text-sm);
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .omet-lbl {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+        }
+
+        .detail-header {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            margin-bottom: var(--space-5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .detail-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 100% 50%, rgba(0, 212, 180, .04), transparent);
+            pointer-events: none;
+        }
+
+        .detail-hero {
+            display: flex;
+            align-items: center;
+            gap: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .detail-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background: var(--color-base-700);
+            border: 1px solid var(--border-default);
+        }
+
+        .detail-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .dkpi {
+            padding: var(--space-4);
+            background: var(--color-base-750);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+        }
+
+        .dkpi-val {
+            font-size: var(--text-xl);
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dkpi-lbl {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .menu-sync-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            margin-bottom: var(--space-5);
+        }
+
+        .menu-sync-hdr {
+            padding: var(--space-4) var(--space-5);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-sync-item {
+            padding: var(--space-4) var(--space-5);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .menu-sync-item:last-child {
+            border-bottom: none;
+        }
+
+        .toggle {
+            width: 44px;
+            height: 24px;
+            background: var(--color-base-600);
+            border-radius: var(--radius-full);
+            position: relative;
+            cursor: pointer;
+            transition: background var(--transition-base);
+            flex-shrink: 0;
+        }
+
+        .toggle.on {
+            background: var(--color-primary);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            transition: transform var(--transition-base);
+        }
+
+        .toggle.on::after {
+            transform: translateX(20px);
+        }
+
+        .override-badge {
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            font-size: 9px;
+            font-weight: 700;
+            background: rgba(245, 166, 35, .1);
+            color: var(--color-warning);
+            border: 1px solid rgba(245, 166, 35, .2);
+        }
+
+        .context-switch {
+            display: flex;
+            gap: 3px;
+            background: var(--color-base-700);
+            padding: 3px;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-5);
+        }
+
+        .ctx-btn {
+            flex: 1;
+            padding: var(--space-3);
+            border-radius: calc(var(--radius-md)-2px);
+            font-size: var(--text-xs);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            color: var(--text-muted);
+            border: none;
+            text-align: center;
+        }
+
+        .ctx-btn.active {
+            background: var(--color-primary);
+            color: var(--color-base-900);
+        }
+
+        .comparison-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--space-3);
+            margin-bottom: var(--space-5);
+        }
+
+        .cmp-col {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .cmp-hdr {
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--text-xs);
+            font-weight: 700;
+            text-align: center;
+            border-radius: var(--radius-md);
+            background: var(--surface-glass);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .cmp-card {
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            text-align: center;
+            background: var(--surface-card);
+        }
+
+        .cmp-card.highlighted {
+            border-color: var(--border-primary);
+            background: var(--color-primary-ghost);
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 15, 18, .7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-xl);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-base);
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        @media(max-width:900px) {
+            .outlets-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .outlets-left {
+                max-height: 240px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-subtle);
+            }
+
+            .detail-kpis {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="cs-nav"></nav>
+    <div class="cs-page" style="height:100vh;display:flex;flex-direction:column;overflow:hidden;">
+        <!-- TOOLBAR -->
+        <div
+            style="padding:var(--space-3) var(--space-5);background:var(--color-base-800);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:var(--space-4);">
+            <div style="font-size:var(--text-base);font-weight:800;">Multi-Outlet SaaS Control</div>
+            <div class="badge badge-primary">5 Locations</div>
+            <div style="margin-left:auto;display:flex;gap:var(--space-3);">
+                <button class="btn btn-sm btn-secondary" onclick="pushMenuUpdate()">📡 Push Menu Update</button>
+                <button class="btn btn-sm btn-primary" onclick="syncAll()">↺ Sync All</button>
+            </div>
+        </div>
+
+        <div class="outlets-layout" style="flex:1;">
+            <!-- LEFT: OUTLET LIST -->
+            <div class="outlets-left">
+                <div style="padding:var(--space-4);border-bottom:1px solid var(--border-subtle);">
+                    <div style="font-size:var(--text-sm);font-weight:700;margin-bottom:var(--space-1);">Your Outlets
+                    </div>
+                    <div style="font-size:var(--text-xs);color:var(--text-muted);">Click to switch context</div>
+                </div>
+                <div style="flex:1;overflow-y:auto;" id="outletList"></div>
+                <div style="padding:var(--space-4);border-top:1px solid var(--border-subtle);">
+                    <div
+                        style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:var(--space-2);">
+                        Chain Summary</div>
+                    <div style="font-size:var(--text-2xl);font-weight:900;color:var(--color-primary);">
+                        <span data-counter="222600" data-prefix="₹">0</span>
+                    </div>
+                    <div style="font-size:var(--text-xs);color:var(--text-muted);">Combined MTD Revenue</div>
+                </div>
+            </div>
+
+            <!-- RIGHT: OUTLET DETAIL -->
+            <div class="outlets-right" id="outletDetail">
+                <div style="text-align:center;padding:var(--space-12);color:var(--text-muted);">Select an outlet to view
+                    details</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script>
+        let activeOutlet = null;
+
+        const OUTLET_ICONS = { 'Dine-In': '🏢', 'Cloud Kitchen': '☁️', 'Kiosk': '🎯' };
+        const FAKE_ORDERS = { 'main': 147, 'juhu': 98, 'ck1': 63, 'ck2': 41, 'mall': 0 };
+        const FAKE_AVG = { 'main': 572, 'juhu': 631, 'ck1': 753, 'ck2': 710, 'mall': 0 };
+
+        function renderOutletList() {
+            const list = document.getElementById('outletList');
+            list.innerHTML = CS.config.outlets.map((o, i) => `
+        <div class="outlet-card ${i === 0 ? 'active' : ''}" id="oc-${o.id}" onclick="selectOutlet('${o.id}',this)">
+          <div class="outlet-head">
+            <div class="outlet-icon">${OUTLET_ICONS[o.type] || '🏪'}</div>
+            <div>
+              <div class="outlet-name">${o.name}</div>
+              <div style="display:flex;align-items:center;gap:var(--space-2);margin-top:2px;">
+                <div class="outlet-type">${o.type}</div>
+                <span class="badge ${o.status === 'online' ? 'badge-success' : o.status === 'warning' ? 'badge-warning' : 'badge-critical'}" style="font-size:8px;">${o.status.toUpperCase()}</span>
+              </div>
+            </div>
+          </div>
+          ${o.status !== 'offline' ? `<div class="outlet-metrics">
+            <div class="omet"><div class="omet-val" style="color:var(--color-primary);"><span data-counter="${(o.revenue / 1000).toFixed(1)}" data-prefix="₹" data-suffix="k" data-decimals="1">0</span></div><div class="omet-lbl">Revenue</div></div>
+            <div class="omet"><div class="omet-val" style="color:var(--color-success);"><span data-counter="${FAKE_ORDERS[o.id]}">0</span></div><div class="omet-lbl">Orders</div></div>
+          </div>`: `<div style="font-size:var(--text-xs);color:var(--color-critical);font-weight:700;padding:var(--space-2) 0;">⚠ OUTLET OFFLINE</div>`}
+        </div>`).join('');
+
+            if (typeof initScrollAnimations === 'function') initScrollAnimations();
+        }
+
+        function selectOutlet(id, el) {
+            document.querySelectorAll('.outlet-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            const outlet = CS.config.outlets.find(o => o.id === id);
+            activeOutlet = outlet;
+            renderDetail(outlet);
+            showToast(`Switched to ${outlet.name}`, 'info', 1800);
+        }
+
+        function renderDetail(outlet) {
+            const orders = FAKE_ORDERS[outlet.id];
+            const avg = FAKE_AVG[outlet.id];
+            const detail = document.getElementById('outletDetail');
+            detail.style.opacity = '0';
+            setTimeout(() => {
+                detail.innerHTML = `
+          <div class="detail-header">
+            <div class="detail-hero">
+              <div class="detail-icon">${OUTLET_ICONS[outlet.type] || '🏪'}</div>
+              <div style="flex:1;">
+                <div style="font-size:var(--text-2xl);font-weight:900;">${outlet.name}</div>
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-2);">
+                  <span class="badge ${outlet.status === 'online' ? 'badge-success' : outlet.status === 'warning' ? 'badge-warning' : 'badge-critical'}">${outlet.status.toUpperCase()}</span>
+                  <span class="badge badge-neutral">${outlet.type}</span>
+                  <span style="font-size:var(--text-xs);color:var(--text-muted);">Last sync: <span style="color:var(--color-success);font-weight:700;">2s ago</span></span>
+                </div>
+              </div>
+              <div style="display:flex;gap:var(--space-2);">
+                <button class="btn btn-ghost btn-sm" onclick="showToast('Edit mode','info')">✎ Edit</button>
+                <button class="btn btn-secondary btn-sm" onclick="showToast('Remote restart sent','warning')">↺ Restart</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="context-switch">
+            <button class="ctx-btn active" onclick="ctxSwitch(this,'overview')">Overview</button>
+            <button class="ctx-btn" onclick="ctxSwitch(this,'menu')">Menu Overrides</button>
+            <button class="ctx-btn" onclick="ctxSwitch(this,'compare')">Compare All</button>
+          </div>
+
+          <div id="ctxOverview">
+            <div class="detail-kpis">
+              <div class="dkpi primary"><div class="dkpi-val" style="color:var(--color-primary);"><span data-counter="${(outlet.revenue / 1000).toFixed(1)}" data-prefix="₹" data-suffix="k" data-decimals="1">0</span></div><div class="dkpi-lbl">Today Revenue</div></div>
+              <div class="dkpi success"><div class="dkpi-val" style="color:var(--color-success);"><span data-counter="${orders}">0</span></div><div class="dkpi-lbl">Orders</div></div>
+              <div class="dkpi secondary"><div class="dkpi-val" style="color:var(--color-secondary);"><span data-counter="${avg}" data-prefix="₹">0</span></div><div class="dkpi-lbl">Avg Ticket</div></div>
+              <div class="dkpi warning"><div class="dkpi-val" style="color:var(--color-warning);">${outlet.status === 'online' ? '<span data-counter="98.2" data-suffix="%" data-decimals="1">0</span>' : 'OFFLINE'}</div><div class="dkpi-lbl">Uptime</div></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+              <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);padding:var(--space-5);">
+                <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-4);">Performance vs Chain Avg</div>
+                ${['Revenue', 'Orders', 'Avg Ticket', 'Food Cost', 'Satisfaction'].map((m, i) => {
+                    const pct = [outlet.revenue / 84200 * 100, orders / 147 * 100, avg / 572 * 100, 31.4, 4.7 / 5 * 100][i];
+                    return `<div style="margin-bottom:var(--space-3);">
+                    <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);margin-bottom:3px;"><span style="color:var(--text-muted);">${m}</span><span style="color:var(--text-primary);font-weight:700;">${pct.toFixed(0)}%</span></div>
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${Math.min(pct, 100)}%;"></div></div>
+                  </div>`;
+                }).join('')}
+              </div>
+              <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);padding:var(--space-5);">
+                <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-4);">System Status</div>
+                ${[
+                        { label: 'POS Terminal', status: 'Online', ok: true },
+                        { label: 'KDS Screen', status: outlet.status === 'offline' ? 'Offline' : 'Online', ok: outlet.status !== 'offline' },
+                        { label: 'Printer', status: 'Online', ok: true },
+                        { label: 'Payment Gateway', status: 'Online', ok: true },
+                        { label: 'Inventory Sync', status: outlet.status === 'warning' ? 'Degraded' : 'Synced', ok: outlet.status !== 'warning' },
+                    ].map(s => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) 0;border-bottom:1px solid var(--border-subtle);">
+                    <span style="font-size:var(--text-sm);color:var(--text-secondary);">${s.label}</span>
+                    <span class="badge ${s.ok ? 'badge-success' : 'badge-critical'}" style="font-size:8px;">${s.status}</span>
+                  </div>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div id="ctxMenu" style="display:none;">
+            <div class="menu-sync-card">
+              <div class="menu-sync-hdr">
+                <div>
+                  <div style="font-size:var(--text-base);font-weight:700;">Menu Availability for ${outlet.name}</div>
+                  <div style="font-size:var(--text-xs);color:var(--text-muted);">Toggle items on/off or apply location-specific pricing</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="pushMenuUpdate()">Push Changes</button>
+              </div>
+              ${CS.menu.map((item, i) => `
+                <div class="menu-sync-item">
+                  <div style="flex:1;">
+                    <div style="font-size:var(--text-sm);font-weight:700;color:var(--text-primary);">${item.name}</div>
+                    <div style="font-size:var(--text-xs);color:var(--text-muted);">${item.category} · Base price ₹${item.price}</div>
+                  </div>
+                  ${i === 2 || i === 4 ? `<span class="override-badge">OVERRIDE: ₹${item.price + 50}</span>` : ''}
+                  <div class="toggle ${i !== 3 ? 'on' : ''}" onclick="this.classList.toggle('on');showToast('Menu availability updated','success',1500);" title="Toggle availability"></div>
+                </div>`).join('')}
+            </div>
+          </div>
+
+          <div id="ctxCompare" style="display:none;">
+            <div style="font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-4);">All Outlets Comparison</div>
+            <div class="comparison-row">
+              ${CS.config.outlets.map(o => `
+                <div class="cmp-col">
+                  <div class="cmp-hdr ${o.id === outlet.id ? 'active' : ''}" style="${o.id === outlet.id ? 'background:var(--color-primary-ghost);border-color:var(--border-primary);color:var(--color-primary);' : ''}">${o.name.split('–')[0].trim()}</div>
+                  <div class="cmp-card ${o.id === outlet.id ? 'highlighted' : ''}">
+                    <div style="font-size:var(--text-xl);font-weight:900;color:var(--color-primary);">₹${(o.revenue / 1000).toFixed(1)}k</div>
+                    <div style="font-size:9px;color:var(--text-muted);">Revenue</div>
+                  </div>
+                  <div class="cmp-card ${o.id === outlet.id ? 'highlighted' : ''}">
+                    <div style="font-size:var(--text-lg);font-weight:700;color:var(--color-success);">${FAKE_ORDERS[o.id]}</div>
+                    <div style="font-size:9px;color:var(--text-muted);">Orders</div>
+                  </div>
+                  <div class="cmp-card ${o.id === outlet.id ? 'highlighted' : ''}">
+                    <span class="badge ${o.status === 'online' ? 'badge-success' : o.status === 'warning' ? 'badge-warning' : 'badge-critical'}">${o.status.toUpperCase()}</span>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>`;
+                detail.style.transition = 'opacity .35s ease';
+                detail.style.opacity = '1';
+            }, 180);
+        }
+
+        function ctxSwitch(el, ctx) {
+            document.querySelectorAll('.ctx-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            ['ctxOverview', 'ctxMenu', 'ctxCompare'].forEach(id => {
+                const e = document.getElementById(id);
+                if (e) e.style.display = 'none';
+            });
+            const target = document.getElementById('ctx' + ctx.charAt(0).toUpperCase() + ctx.slice(1));
+            if (target) target.style.display = 'block';
+        }
+
+        function pushMenuUpdate() { showToast('Menu update pushed to all outlets 📡', 'success'); }
+        function syncAll() { showToast('Syncing all outlets...', 'info'); setTimeout(() => showToast('All outlets synced ✓', 'success'), 1800); }
+
+        renderOutletList();
+        // Auto-select first outlet
+        const firstCard = document.getElementById(`oc-main`);
+        if (firstCard) { selectOutlet('main', firstCard); }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud POS — CULINA-SUITE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            /* Fix nav height inconsistency */
+            --nav-height: 60px;
+            --pos-toolbar-height: 64px;
+        }
+
+        .pos-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 400px;
+            grid-template-areas: "sidebar menu order";
+            height: calc(100vh - var(--nav-height) - var(--pos-toolbar-height));
+            overflow: hidden;
+            background: var(--color-base-900);
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive area mapping */
+        .pos-sidebar {
+            grid-area: sidebar;
+        }
+
+        .pos-menu {
+            grid-area: menu;
+        }
+
+        .pos-order {
+            grid-area: order;
+        }
+
+        /* Sidebar Styling */
+        .pos-sidebar {
+            background: var(--color-base-800);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 20;
+        }
+
+        .panel-hdr {
+            padding: 0 var(--space-6);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 80px;
+            background: var(--color-base-800);
+            flex-shrink: 0;
+        }
+
+        .panel-hdr-title {
+            font-size: var(--text-xs);
+            font-weight: 900;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            padding: var(--space-5);
+        }
+
+        .sec-lbl {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--color-primary);
+            padding: var(--space-5) var(--space-5) var(--space-2);
+            opacity: 0.8;
+        }
+
+        .tbtn {
+            aspect-ratio: 1.2 / 1;
+            border-radius: var(--radius-lg);
+            border: 2px solid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+            padding: var(--space-3);
+            background: var(--surface-glass);
+        }
+
+        .tbtn.vacant {
+            border-color: var(--border-default);
+            color: var(--text-muted);
+        }
+
+        .tbtn.occupied {
+            background: rgba(0, 212, 180, .1);
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .tbtn.bill {
+            background: rgba(245, 166, 35, .1);
+            border-color: var(--color-warning);
+            color: var(--color-warning);
+            animation: warning-flash 2s infinite;
+        }
+
+        .tbtn.reserved {
+            background: rgba(79, 142, 247, .1);
+            border-color: var(--color-secondary);
+            color: var(--color-secondary);
+        }
+
+        .tbtn.sel {
+            outline: 3px solid var(--color-primary);
+            outline-offset: 2px;
+            transform: scale(1.05);
+            z-index: 10;
+            background: var(--color-primary-ghost);
+        }
+
+        .tbtn__lbl {
+            font-size: var(--text-base);
+            font-weight: 900;
+        }
+
+        .tbtn__cap {
+            font-size: 10px;
+            font-weight: 700;
+            opacity: .8;
+        }
+
+        .tbtn__time {
+            font-size: 9px;
+            font-weight: 900;
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            color: var(--color-primary);
+        }
+
+        /* Menu Panel */
+        .pos-menu {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--color-base-900);
+        }
+
+        .pos-menu-hdr {
+            padding: 0 var(--space-6);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: var(--space-6);
+            background: var(--color-base-800);
+            height: 80px;
+            flex-shrink: 0;
+        }
+
+        .srch-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            background: var(--color-base-750);
+            padding: 0 var(--space-4);
+            height: 48px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.2s ease;
+        }
+
+        .srch-box:focus-within {
+            border-color: var(--color-primary);
+            background: var(--color-base-700);
+            box-shadow: 0 0 0 3px var(--color-primary-ghost);
+        }
+
+        .srch-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: var(--text-sm);
+            font-weight: 600;
+            height: 100%;
+        }
+
+        .ot-tabs {
+            display: flex;
+            gap: 6px;
+            background: var(--color-base-750);
+            padding: 5px;
+            border-radius: 12px;
+            height: 48px;
+            align-items: center;
+        }
+
+        .ot-tab {
+            height: 38px;
+            padding: 0 var(--space-5);
+            border-radius: 8px;
+            font-size: var(--text-xs);
+            font-weight: 800;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--text-muted);
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .ot-tab.active {
+            background: var(--color-primary);
+            color: var(--color-base-900);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cat-bar {
+            padding: var(--space-4) var(--space-6);
+            display: flex;
+            gap: var(--space-3);
+            overflow-x: auto;
+            scrollbar-width: none;
+            border-bottom: 1px solid var(--border-subtle);
+            background: #151821;
+            flex-shrink: 0;
+        }
+
+        .cat-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .c-chip {
+            padding: 10px 22px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: 800;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--text-secondary);
+            background: var(--surface-glass);
+            border: 1.5px solid var(--border-subtle);
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .c-chip.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: var(--color-base-900);
+        }
+
+        .menu-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-6);
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--space-6);
+            align-content: start;
+        }
+
+        .mcard {
+            background: #1a1a24;
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mcard:hover {
+            border-color: var(--color-primary);
+            transform: translateY(-6px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .mcard__img-box {
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            position: relative;
+            background: #0d0d12;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .mcard__img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .mcard:hover .mcard__img {
+            transform: scale(1.1);
+        }
+
+        .mcard__body {
+            padding: var(--space-4);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .mcard__cat {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .mcard__name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.3;
+            height: 2.6em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            /* Added for compatibility */
+            -webkit-box-orient: vertical;
+        }
+
+        .mcard__price {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-top: auto;
+            padding-top: var(--space-2);
+        }
+
+        .mcard__add {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: var(--color-primary);
+            color: var(--color-base-900);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            transition: all 0.2s ease;
+            z-index: 10;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .mcard:hover .mcard__add {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        /* Order Panel */
+        .pos-order {
+            background: #11141d;
+            border-left: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 30;
+        }
+
+        .o-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-6);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            position: relative;
+        }
+
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            padding: var(--space-12);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        /* Order Panel Refinement */
+        .oitem {
+            display: grid;
+            grid-template-columns: 1fr 100px 90px;
+            /* Standardized columns */
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            background: var(--color-base-800);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            min-height: 80px;
+        }
+
+        .oitem__info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .oitem__name {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .oitem__mods {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .qty-ctrl {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--color-base-750);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            width: 100px;
+        }
+
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .qty-btn:hover {
+            background: var(--color-primary);
+            color: var(--color-base-900);
+        }
+
+        .qty-val {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--text-primary);
+        }
+
+        .oitem__total {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--color-primary);
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .o-footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: var(--space-6);
+            background: var(--color-base-800);
+            flex-shrink: 0;
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .totrow {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .totrow.grand {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--text-primary);
+            border-top: 2px dashed var(--border-subtle);
+            padding-top: 20px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .pay-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 480px) {
+            .pay-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .oitem {
+                grid-template-columns: 1fr auto;
+                grid-template-areas: "info price" "qty price";
+            }
+
+            .oitem__info {
+                grid-area: info;
+            }
+
+            .qty-ctrl {
+                grid-area: qty;
+                width: 90px;
+                margin-top: 8px;
+            }
+
+            .oitem__total {
+                grid-area: price;
+                font-size: 16px;
+            }
+        }
+
+        .pbtn {
+            height: 48px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            border: 1.5px solid var(--border-default);
+            background: var(--color-base-750);
+            color: var(--text-secondary);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pbtn.active {
+            background: var(--color-primary);
+            color: var(--color-base-900);
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--color-primary-glow);
+        }
+
+        /* Order Header Refinement */
+        .o-hdr-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .o-hdr-sub {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .o-hdr-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .o-hdr-id {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--color-primary);
+            background: rgba(0, 212, 180, 0.1);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 900;
+            border: 1px solid rgba(0, 212, 180, 0.2);
+            margin-left: var(--space-4);
+        }
+
+        /* Toolbar Styling */
+        .pos-toolbar {
+            padding: 0 var(--space-6);
+            background: var(--color-base-800);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: var(--pos-toolbar-height);
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .offline-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-4);
+            background: var(--color-critical);
+            color: white;
+            padding: 0 var(--space-6);
+            height: 0;
+            overflow: hidden;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: var(--text-xs);
+            font-weight: 800;
+            z-index: 90;
+            position: sticky;
+            top: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .offline-bar.show {
+            height: 44px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .offline-bar__content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .offline-bar__dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            animation: ring-pulse 1.5s infinite;
+        }
+
+        .offline-bar__btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            margin-left: var(--space-4);
+        }
+
+        .offline-bar__btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .tb-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .tb-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--text-primary);
+            letter-spacing: 0.05em;
+            border-left: 3px solid var(--color-primary);
+            padding-left: 15px;
+        }
+
+        .tb-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-6);
+        }
+
+        .tb-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tb-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--color-primary);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 13px;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 1200px) {
+            .pos-layout {
+                grid-template-columns: 240px 1fr 360px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .pos-layout {
+                grid-template-columns: 1fr;
+                grid-template-areas: "menu";
+                height: calc(100vh - var(--nav-height) - var(--pos-toolbar-height));
+            }
+
+            .pos-sidebar {
+                position: absolute;
+                left: -280px;
+                top: calc(var(--nav-height) + var(--pos-toolbar-height));
+                bottom: 0;
+                width: 280px;
+                transition: left 0.3s ease;
+            }
+
+            .pos-sidebar.open {
+                left: 0;
+            }
+
+            #sidebarToggle {
+                display: block !important;
+            }
+
+            .pos-order {
+                position: fixed;
+                right: -100%;
+                top: calc(var(--nav-height) + var(--pos-toolbar-height));
+                bottom: 0;
+                width: 100%;
+                transition: right 0.3s ease;
+            }
+
+            .pos-order.open {
+                right: 0;
+            }
+
+            .tb-title {
+                font-size: 13px;
+            }
+
+            .tb-user-info {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .pos-toolbar {
+                padding: 0 var(--space-4);
+                gap: 10px;
+            }
+
+            .tb-title {
+                border: none;
+                padding-left: 0;
+                font-size: 11px;
+            }
+
+            #live-clock {
+                display: none;
+            }
+
+            .ot-tabs {
+                display: none;
+            }
+
+            /* Hide tabs on mobile toolbar to save space */
+            .menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                padding: var(--space-4);
+                gap: var(--space-4);
+            }
+
+            .mcard__img-box {
+                height: 120px;
+            }
+
+            .mcard__name {
+                font-size: 12px;
+                height: 3.2em;
+            }
+
+            .pay-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Floating Cart Toggle for Mobile */
+        .cart-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: var(--color-primary);
+            color: var(--color-base-900);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 10px 25px rgba(0, 212, 180, 0.4);
+            z-index: 1000;
+        }
+
+        @media (max-width: 1024px) {
+            .cart-toggle {
+                display: flex;
+            }
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--color-critical);
+            color: white;
+            font-size: 11px;
+            font-weight: 900;
+            width: 24px;
+            height: 24px;
+            border-radius: 12px;
+            display: flex;
+            border: 3px solid var(--color-base-900);
+        }
+
+        /* Modal Overhaul */
+        .mod-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: var(--space-5);
+        }
+
+        .mod-modal.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .mod-box {
+            background: var(--color-base-800);
+            border: 1px solid var(--border-default);
+            border-radius: 32px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: var(--space-8);
+            transform: scale(0.9) translateY(40px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .mod-modal.open .mod-box {
+            transform: scale(1) translateY(0);
+        }
+
+        .mod-hdr {
+            display: flex;
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+            align-items: center;
+        }
+
+        .mod-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            object-fit: cover;
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+        }
+
+        .mod-opt {
+            padding: 12px 20px;
+            border-radius: var(--radius-full);
+            border: 2px solid var(--border-default);
+            background: var(--surface-glass);
+            color: var(--text-secondary);
+            font-size: var(--text-xs);
+            font-weight: 800;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .mod-opt.sel {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: var(--color-base-900);
+            box-shadow: var(--shadow-glow-teal);
+        }
+
+        @media (max-width: 480px) {
+            .mod-box {
+                padding: var(--space-6);
+            }
+
+            .mod-hdr {
+                gap: var(--space-4);
+                margin-bottom: var(--space-6);
+            }
+
+            .mod-img {
+                width: 80px;
+                height: 80px;
+            }
+
+            #modTitle {
+                font-size: var(--text-base) !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="cs-nav"></nav>
+    <div class="cs-page">
+        <!-- TOOLBAR -->
+        <div class="pos-toolbar">
+            <div class="tb-brand">
+                <button class="btn btn-ghost btn-sm" onclick="toggleSidebar()" id="sidebarToggle"
+                    style="display:none; font-size: 20px;">☰</button>
+                <div class="tb-title">THE GRAND BRASSERIE</div>
+                <div class="badge badge-success" id="onlineBadge">● ONLINE</div>
+            </div>
+            <div class="tb-actions">
+                <div id="live-clock"></div>
+                <button onclick="toggleOffline()" class="btn btn-ghost btn-sm">📡 OFFLINE MODE</button>
+                <div class="tb-user">
+                    <div class="tb-user-info">
+                        <div style="font-size:11px;font-weight:900;color:var(--text-primary);">Riya S.</div>
+                        <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;font-weight:800;">
+                            Master Cashier</div>
+                    </div>
+                    <div class="tb-avatar">RS</div>
+                </div>
+            </div>
+        </div>
+        <!-- OFFLINE BAR -->
+        <div class="offline-bar" id="offlineBar">
+            <div class="offline-bar__content">
+                <div class="offline-bar__dot"></div>
+                <span>⚡ CRITICAL: OFFLINE MODE · Local storage active</span>
+            </div>
+            <button onclick="toggleOffline()" class="offline-bar__btn">Connect Now</button>
+        </div>
+        <!-- MAIN -->
+        <div class="pos-layout">
+            <!-- LEFT SIDEBAR -->
+            <div class="pos-sidebar" id="posSidebar">
+                <div class="panel-hdr">
+                    <div class="panel-hdr-title">Dynamic Floor Plan</div>
+                    <div style="font-size:10px;font-weight:900;color:var(--color-primary);">LIVE</div>
+                </div>
+                <div style="flex:1;overflow-y:auto;" id="tableMap"></div>
+                <div
+                    style="padding:var(--space-5) var(--space-6);border-top:1px solid var(--border-subtle);display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);background:#11141d;">
+                    <div
+                        style="display:flex;align-items:center;gap:8px;font-size:9px;font-weight:800;color:var(--text-muted);text-transform:uppercase;">
+                        <div style="width:10px;height:10px;border-radius:3px;background:var(--border-default);"></div>
+                        Vacant
+                    </div>
+                    <div
+                        style="display:flex;align-items:center;gap:8px;font-size:9px;font-weight:800;color:var(--text-muted);text-transform:uppercase;">
+                        <div style="width:10px;height:10px;border-radius:3px;background:var(--color-primary);"></div>
+                        Occupied
+                    </div>
+                    <div
+                        style="display:flex;align-items:center;gap:8px;font-size:9px;font-weight:800;color:var(--text-muted);text-transform:uppercase;">
+                        <div style="width:10px;height:10px;border-radius:3px;background:var(--color-warning);"></div>
+                        Billing
+                    </div>
+                    <div
+                        style="display:flex;align-items:center;gap:8px;font-size:9px;font-weight:800;color:var(--text-muted);text-transform:uppercase;">
+                        <div style="width:10px;height:10px;border-radius:3px;background:var(--color-secondary);"></div>
+                        Reserved
+                    </div>
+                </div>
+            </div>
+            <!-- MENU CENTER -->
+            <div class="pos-menu">
+                <div class="pos-menu-hdr">
+                    <div class="srch-box">
+                        <span style="color:var(--color-primary);font-size:18px;">🔍</span>
+                        <input type="text" placeholder="Search menu favorites..." oninput="renderMenu(this.value)">
+                    </div>
+                    <div class="ot-tabs">
+                        <button class="ot-tab active" onclick="setOT('dine-in',this)">Dine-In</button>
+                        <button class="ot-tab" onclick="setOT('takeaway',this)">Takeaway</button>
+                        <button class="ot-tab" onclick="setOT('delivery',this)">Delivery</button>
+                    </div>
+                </div>
+                <div class="cat-bar" id="catBar"></div>
+                <div class="menu-grid" id="menuGrid"></div>
+            </div>
+            <!-- RIGHT ORDER PANEL -->
+            <div class="pos-order" id="posOrder">
+                <div class="panel-hdr">
+                    <div class="o-hdr-info">
+                        <div class="panel-hdr-title" id="oTitle">Select Table</div>
+                        <div class="o-hdr-sub" id="oSub">Cart inactive</div>
+                    </div>
+                    <div class="o-hdr-id" id="oId">#POS-000</div>
+                </div>
+                <div class="o-items" id="oItems">
+                    <div class="empty-state" id="emptyState">
+                        <div style="font-size:64px;margin-bottom:20px;filter:grayscale(1) opacity(0.2);">🥗</div>
+                        <div style="font-size:var(--text-base);font-weight:900;color:var(--text-primary);">Order Queue
+                            Empty</div>
+                        <div
+                            style="font-size:var(--text-xs);color:var(--text-muted);margin-top:12px;max-width:240px;line-height:1.6;opacity:0.7;">
+                            Select a table and start adding items to the current session.
+                        </div>
+                    </div>
+                </div>
+                <div class="o-footer">
+                    <div id="totalsBlock" style="display:none;">
+                        <div class="totrow"><span>Items Subtotal</span><span id="sub"
+                                style="color:var(--text-primary);font-weight:700;">₹0</span></div>
+                        <div class="totrow"><span>GST (5%)</span><span id="gst">₹0</span></div>
+                        <div class="totrow"><span>Service (10%)</span><span id="svc">₹0</span></div>
+                        <div class="totrow grand"><span>Payable Total</span><span id="tot">₹0</span></div>
+                    </div>
+                    <div class="pay-grid" id="payGrid" style="display:none;">
+                        <button class="pbtn active" onclick="selPay(this)">💵 Cash</button>
+                        <button class="pbtn" onclick="selPay(this)">💳 Card</button>
+                        <button class="pbtn" onclick="selPay(this)">📲 UPI</button>
+                        <button class="pbtn" onclick="selPay(this)">⇄ Split</button>
+                    </div>
+                    <button class="btn btn-primary w-full" id="kdsBtn" onclick="sendKDS()"
+                        style="display:none;height:54px;font-size:var(--text-sm);">🍳 Push to KDS Queue</button>
+                    <div style="display:flex;gap:var(--space-3);margin-top:var(--space-3);display:none;" id="altBtns">
+                        <button class="btn btn-ghost btn-sm flex-1" onclick="clearOrder()"
+                            style="border-color:var(--border-default);">✕ Discard</button>
+                        <button class="btn btn-secondary btn-sm flex-1" onclick="showToast('Session held','info')">⏸
+                            Hold</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- FLOATING CART TOGGLE (Mobile) -->
+    <button class="cart-toggle" onclick="toggleOrder()">
+        🛒
+        <div class="cart-count" id="cartCount">0</div>
+    </button>
+    <!-- MODIFIER MODAL -->
+    <div class="mod-modal" id="modModal">
+        <div class="mod-box">
+            <div class="mod-hdr">
+                <img src="" class="mod-img" id="modHero">
+                <div style="flex:1;">
+                    <div style="font-size:var(--text-2xl);font-weight:900;color:var(--text-primary);" id="modTitle">Item
+                    </div>
+                    <div style="font-size:var(--text-lg);font-weight:800;color:var(--color-primary);margin-top:5px;"
+                        id="modPrice">₹0</div>
+                </div>
+                <button onclick="closeMod()"
+                    style="font-size:32px;color:var(--text-muted);border:none;background:none;cursor:pointer;line-height:1;">×</button>
+            </div>
+            <div style="margin-bottom:var(--space-6);">
+                <div
+                    style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:var(--space-3);">
+                    Serving Size</div>
+                <div class="mod-opts-size" style="display:flex;gap:10px;">
+                    <button class="mod-opt sel" onclick="selModSize(this)">Standard</button>
+                    <button class="mod-opt" onclick="selModSize(this)">Large (+₹80)</button>
+                </div>
+            </div>
+            <div style="margin-bottom:var(--space-6);">
+                <div
+                    style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:var(--space-3);">
+                    Personalize Preparation</div>
+                <div id="modOptWrap" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+            </div>
+            <div style="margin-bottom:var(--space-8);">
+                <div
+                    style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:var(--space-3);">
+                    Kitchen Instructions</div>
+                <input type="text" class="cs-input" id="specNote" placeholder="e.g. Less oil, make it extra spicy..."
+                    style="height:50px;">
+            </div>
+            <div style="display:flex;gap:var(--space-4);">
+                <button onclick="closeMod()" class="btn btn-ghost flex-1" style="height:56px;">Discard</button>
+                <button onclick="confirmAdd()" class="btn btn-primary flex-1"
+                    style="height:56px;font-size:var(--text-sm);">Confirm Addition →</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/script.js"></script>
+    <script>
+        let cart = [], selTable = null, curCat = 'All', isOffline = false, pendItem = null, oCounter = 1049;
+
+        const DISH_IMAGES = {
+            1: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop', // Truffle Mushroom Risotto
+            2: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop', // Pan-Seared Salmon
+            3: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&h=300&fit=crop', // Chicken Piccata
+            4: 'images/classic-caesar-salad.jpg', // Classic Caesar Salad
+            5: 'https://images.unsplash.com/photo-1541529086526-db283c563270?w=400&h=300&fit=crop', // Burrata & Prosciutto
+            6: 'images/espresso-martini.jpg', // Espresso Martini
+            7: 'images/mango-bellini.jpg', // Mango Bellini
+            8: 'images/tiramisu.jpg', // Tiramisu
+            9: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=400&h=300&fit=crop', // Chocolate Lava Cake
+            10: 'images/sourdough-garlic-bread.jpg' // Sourdough Garlic Bread
+        };
+
+        const CAT_IMAGES = {
+            'Mains': 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
+            'Starters': 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&h=300&fit=crop',
+            'Cocktails': 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop',
+            'Desserts': 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop',
+            'Sides': 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=400&h=300&fit=crop'
+        };
+
+        const MODS = {
+            'Mains': ['Extra Sauce', 'No Onion', 'Well Done', 'Less Salt', 'Add Cheese (+₹60)'],
+            'Starters': ['Dressing on side', 'No Croutons', 'Extra Portion'],
+            'Cocktails': ['Less Sweet', 'Extra Ice', 'No Ice', 'Double Shot (+₹80)'],
+            'Desserts': ['Warm', 'With Cream', 'No Sugar'],
+            'Sides': ['Extra Butter', 'No Garlic']
+        };
+
+        function renderTableMap() {
+            const map = document.getElementById('tableMap');
+            const secs = {};
+            CS.tables.forEach(t => { if (!secs[t.section]) secs[t.section] = []; secs[t.section].push(t); });
+            map.innerHTML = '';
+            Object.entries(secs).forEach(([sec, tables]) => {
+                const lbl = document.createElement('div'); lbl.className = 'sec-lbl'; lbl.textContent = sec; map.appendChild(lbl);
+                const grid = document.createElement('div'); grid.className = 'table-grid';
+                tables.forEach(t => {
+                    const btn = document.createElement('button');
+                    btn.className = `tbtn ${t.status}`; btn.id = `tbl-${t.id}`; btn.onclick = () => selTbl(t);
+                    btn.innerHTML = `${t.time ? `<div class="tbtn__time">${t.time}</div>` : ''}
+                        <div class="tbtn__lbl">${t.label}</div><div class="tbtn__cap">×${t.capacity}</div>`;
+                    grid.appendChild(btn);
+                });
+                map.appendChild(grid);
+            });
+        }
+
+        function selTbl(t) {
+            document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('sel'));
+            const el = document.getElementById(`tbl-${t.id}`);
+            if (el) el.classList.add('sel');
+            selTable = t;
+            document.getElementById('oTitle').textContent = t.label;
+            document.getElementById('oSub').textContent = `${t.section} · Cap ${t.capacity}${t.covers ? ' · ' + t.covers + ' cvr' : ''}`;
+            document.getElementById('oId').textContent = t.orderId || `#POS-${oCounter++}`;
+            if (t.status === 'occupied' || t.status === 'bill') {
+                cart = CS.menu.slice(0, 2 + Math.floor(Math.random() * 2)).map(i => ({ ...i, qty: 1, mods: '' }));
+                renderCart();
+            } else {
+                cart = [];
+                renderCart();
+            }
+            showToast(`${t.label} active`, 'info', 1500);
+        }
+
+        function renderCats() {
+            const cats = ['All', ...new Set(CS.menu.map(m => m.category))];
+            document.getElementById('catBar').innerHTML = cats.map(c => `<div class="c-chip ${c === 'All' ? 'active' : ''}" onclick="setcat('${c}',this)">${c}</div>`).join('');
+        }
+
+        function setcat(c, el) {
+            document.querySelectorAll('.c-chip').forEach(x => x.classList.remove('active'));
+            el.classList.add('active'); curCat = c; renderMenu();
+        }
+
+        function renderMenu(f = '') {
+            let items = CS.menu;
+            if (curCat !== 'All') items = items.filter(m => m.category === curCat);
+            if (f) items = items.filter(m => m.name.toLowerCase().includes(f.toLowerCase()));
+            const grid = document.getElementById('menuGrid');
+            if (!items.length) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:var(--space-12);color:var(--text-muted);font-weight:700;">No items found</div>';
+                return;
+            }
+            grid.innerHTML = items.map(item => {
+                const isCustomer = (getUser()?.position === 'Customer');
+                const stockLabel = (!isCustomer && item.stock < 10)
+                    ? `<div style="position:absolute;bottom:0;left:0;right:0;background:var(--color-warning);color:black;font-size:8px;font-weight:900;text-align:center;padding:2px;">LIMITED STOCK</div>`
+                    : '';
+
+                return `
+                <div class="mcard" id="mi-${item.id}" onclick="openMod(${item.id})">
+                    <div class="mcard__img-box">
+                        <img src="${DISH_IMAGES[item.id] || CAT_IMAGES[item.category] || CAT_IMAGES['Mains']}" class="mcard__img" alt="${item.name}">
+                        <div class="mcard__add">+</div>
+                    </div>
+                    <div class="mcard__body">
+                        <div class="mcard__cat">${item.category}</div>
+                        <div class="mcard__name">${item.name}</div>
+                        <div class="mcard__price">₹${item.price.toLocaleString('en-IN')}</div>
+                    </div>
+                    ${stockLabel}
+                </div>`;
+            }).join('');
+        }
+
+        function setOT(type, el) { document.querySelectorAll('.ot-tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); }
+
+        function openMod(id) {
+            if (!selTable) { showToast('Please select a table on the left first!', 'warning'); return; }
+            pendItem = { ...CS.menu.find(m => m.id === id), qty: 1, mods: [] };
+            document.getElementById('modTitle').textContent = pendItem.name;
+            document.getElementById('modPrice').textContent = `₹${pendItem.price.toLocaleString('en-IN')}`;
+            document.getElementById('modHero').src = DISH_IMAGES[pendItem.id] || CAT_IMAGES[pendItem.category] || CAT_IMAGES['Mains'];
+            const mods = MODS[pendItem.category] || MODS['Mains'];
+            document.getElementById('modOptWrap').innerHTML = mods.map(m => `<div class="mod-opt" onclick="this.classList.toggle('sel')">${m}</div>`).join('');
+            document.getElementById('specNote').value = '';
+            document.getElementById('modModal').classList.add('open');
+        }
+
+        function selModSize(el) { document.querySelectorAll('.mod-opts-size .mod-opt').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); }
+        function closeMod() { document.getElementById('modModal').classList.remove('open'); }
+
+        function confirmAdd() {
+            if (!pendItem) return;
+            const mods = [...document.querySelectorAll('#modOptWrap .mod-opt.sel')].map(o => o.textContent);
+            const note = document.getElementById('specNote').value;
+            if (note) mods.push(note);
+            pendItem.mods = mods.join(', ');
+            const ex = cart.find(o => o.id === pendItem.id && o.mods === pendItem.mods);
+            if (ex) ex.qty++; else cart.push({ ...pendItem, qty: 1 });
+            closeMod();
+            renderCart();
+            // Open cart on mobile when adding first item
+            if (cart.length === 1 && window.innerWidth <= 1024) toggleOrder();
+
+            const c = document.getElementById(`mi-${pendItem.id}`);
+            if (c) { c.classList.add('added'); setTimeout(() => c.classList.remove('added'), 400); }
+            showToast(`${pendItem.name} added to ${selTable.label}`, 'success', 1500);
+        }
+
+        function renderCart() {
+            const box = document.getElementById('oItems');
+            const emp = document.getElementById('emptyState');
+
+            box.querySelectorAll('.oitem').forEach(e => e.remove());
+
+            if (!cart.length) {
+                if (emp) emp.style.display = 'flex';
+                ['totalsBlock', 'payGrid', 'kdsBtn', 'altBtns'].forEach(id => {
+                    const e = document.getElementById(id);
+                    if (e) e.style.display = 'none';
+                });
+                return;
+            }
+
+            if (emp) emp.style.display = 'none';
+            document.getElementById('totalsBlock').style.display = 'block';
+            document.getElementById('payGrid').style.display = 'grid';
+            document.getElementById('kdsBtn').style.display = 'block';
+            document.getElementById('altBtns').style.display = 'flex';
+
+            cart.forEach((item, i) => {
+                const el = document.createElement('div');
+                el.className = 'oitem';
+                el.innerHTML = `
+                    <div class="oitem__info">
+                        <div class="oitem__name">${item.name}</div>
+                        <div class="oitem__mods">${item.mods || 'No customizations'}</div>
+                    </div>
+                    <div class="qty-ctrl">
+                        <button class="qty-btn" onclick="adj(${i},-1)">−</button>
+                        <span class="qty-val">${item.qty}</span>
+                        <button class="qty-btn" onclick="adj(${i},1)">+</button>
+                    </div>
+                    <div class="oitem__total">₹${(item.price * item.qty).toLocaleString('en-IN')}</div>`;
+                box.appendChild(el);
+            });
+            calcTotals();
+
+            // Update mobile cart count
+            const count = cart.reduce((acc, i) => acc + i.qty, 0);
+            document.getElementById('cartCount').textContent = count;
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('posSidebar');
+            sb.classList.toggle('open');
+            if (sb.classList.contains('open')) document.getElementById('posOrder').classList.remove('open');
+        }
+
+        function toggleOrder() {
+            const ord = document.getElementById('posOrder');
+            ord.classList.toggle('open');
+            if (ord.classList.contains('open')) document.getElementById('posSidebar').classList.remove('open');
+        }
+
+        function adj(i, d) { cart[i].qty += d; if (cart[i].qty <= 0) cart.splice(i, 1); renderCart(); }
+
+        function calcTotals() {
+            const s = cart.reduce((acc, i) => acc + i.price * i.qty, 0);
+            const g = Math.round(s * .05), sv = Math.round(s * .1), t = s + g + sv;
+            document.getElementById('sub').textContent = `₹${s.toLocaleString('en-IN')}`;
+            document.getElementById('gst').textContent = `₹${g.toLocaleString('en-IN')}`;
+            document.getElementById('svc').textContent = `₹${sv.toLocaleString('en-IN')}`;
+            document.getElementById('tot').textContent = `₹${t.toLocaleString('en-IN')}`;
+        }
+
+        function selPay(el) { document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('active')); el.classList.add('active'); }
+
+        function sendKDS() {
+            if (!selTable || !cart.length) { showToast('Please select a table and add items', 'warning'); return; }
+            showToast('✓ Order synced with Kitchen!', 'success');
+            const b = document.getElementById('kdsBtn');
+            b.textContent = '✓ ORDER SYNCED';
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-success');
+            b.disabled = true;
+            setTimeout(() => {
+                b.textContent = '🍳 Push to KDS Queue';
+                b.classList.remove('btn-success');
+                b.classList.add('btn-primary');
+                b.disabled = false;
+            }, 3000);
+        }
+
+        function clearOrder() {
+            cart = []; selTable = null;
+            document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('sel'));
+            document.getElementById('oTitle').textContent = 'Select Table';
+            document.getElementById('oSub').textContent = 'Cart inactive';
+            document.getElementById('oId').textContent = '#POS-000';
+            renderCart();
+            showToast('Order discarded', 'info');
+        }
+
+        function toggleOffline() {
+            isOffline = !isOffline;
+            const bar = document.getElementById('offlineBar');
+            const badge = document.getElementById('onlineBadge');
+            if (isOffline) {
+                bar.classList.add('show');
+                badge.className = 'badge badge-critical';
+                badge.textContent = '● OFFLINE';
+                showToast('Switched to Offline Mode', 'warning');
+            } else {
+                bar.classList.remove('show');
+                badge.className = 'badge badge-success';
+                badge.textContent = '● ONLINE';
+                showToast('System Online', 'success');
+            }
+        }
+
+        // Initialize
+        renderTableMap();
+        renderCats();
+        renderMenu();
+    </script>
+</body>
+
+</html>
